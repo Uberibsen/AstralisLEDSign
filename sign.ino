@@ -1,5 +1,5 @@
 /*
-Project: Astralis LED Sign  
+Project: Astralis LED Sign
 Created by: Jonas Ibsen
 Date: 15th of February 2020
 
@@ -53,8 +53,8 @@ void setup() {
   // WS2812B Pins
   pinMode(LED_DATA, OUTPUT);
   FastLED.addLeds<WS2812, LED_DATA, GRB>(leds, NUM_LEDS);
-  
-  // Sequence Button Pin 
+
+  // Sequence Button Pin
   pinMode(buttonPin, INPUT);
 
   // Brightness Control Pin
@@ -86,9 +86,9 @@ void setAll(byte red, byte green, byte blue) {
   showStrip();
 }
 
-void FadeInOut(byte red, byte green, byte blue){
+void FadeInOut(byte red, byte green, byte blue) {
   float r, g, b;
-     
+
   for(int k = 0; k < 256; k=k+1) {
     r = (k/256.0)*red;
     g = (k/256.0)*green;
@@ -96,7 +96,7 @@ void FadeInOut(byte red, byte green, byte blue){
     setAll(r,g,b);
     showStrip();
   }
-     
+
   for(int k = 255; k >= 0; k=k-2) {
     r = (k/256.0)*red;
     g = (k/256.0)*green;
@@ -108,7 +108,7 @@ void FadeInOut(byte red, byte green, byte blue){
 
 void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
   int Position=0;
- 
+
   for(int j=0; j<5; j++)
   {
       Position++; // = 0; //Position + Rate;
@@ -123,41 +123,39 @@ void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
 }
 
 void theaterChase(byte red, byte green, byte blue, int SpeedDelay) {
-  for (int j=0; j<1; j++) { 
-    for (int q=0; q < 3; q++) {
-      for (int i=0; i < NUM_LEDS; i=i+3) {
-        setPixel(i+q, red, green, blue);    //turn every third pixel on
-      }
-      showStrip();
-      delay(SpeedDelay);
-     
-      for (int i=0; i < NUM_LEDS; i=i+3) {
-        setPixel(i+q, 0,0,0);        //turn every third pixel off
-      }
+  for (int q=0; q < 3; q++) {
+    for (int i=0; i < NUM_LEDS; i=i+3) {
+      setPixel(i+q, red, green, blue);    //turn every third pixel on
+    }
+    showStrip();
+    delay(SpeedDelay);
+
+    for (int i=0; i < NUM_LEDS; i=i+3) {
+      setPixel(i+q, 0,0,0);        //turn every third pixel off
     }
   }
 }
 
-void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {  
+void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {
   setAll(0,0,0);
- 
+
   for(int i = 0; i < NUM_LEDS+NUM_LEDS; i++) {
-   
-   
+
+
     // fade brightness all LEDs one step
     for(int j=0; j<NUM_LEDS; j++) {
       if( (!meteorRandomDecay) || (random(10)>5) ) {
-        fadeToBlack(j, meteorTrailDecay );        
+        fadeToBlack(j, meteorTrailDecay );
       }
     }
-   
+
     // draw meteor
     for(int j = 0; j < meteorSize; j++) {
       if( ( i-j <NUM_LEDS) && (i-j>=0) ) {
         setPixel(i-j, red, green, blue);
       }
     }
-   
+
     showStrip();
     delay(SpeedDelay);
   }
@@ -169,7 +167,7 @@ void fadeToBlack(int ledNo, byte fadeValue) {
     uint32_t oldColor;
     uint8_t r, g, b;
     int value;
-   
+
     oldColor = strip.getPixelColor(ledNo);
     r = (oldColor & 0x00ff0000UL) >> 16;
     g = (oldColor & 0x0000ff00UL) >> 8;
@@ -178,13 +176,13 @@ void fadeToBlack(int ledNo, byte fadeValue) {
     r=(r<=10)? 0 : (int) r-(r*fadeValue/256);
     g=(g<=10)? 0 : (int) g-(g*fadeValue/256);
     b=(b<=10)? 0 : (int) b-(b*fadeValue/256);
-   
+
     strip.setPixelColor(ledNo, r,g,b);
  #endif
  #ifndef ADAFRUIT_NEOPIXEL_H
    // FastLED
    leds[ledNo].fadeToBlackBy( fadeValue );
- #endif  
+ #endif
 }
 
 void CylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay){
@@ -207,6 +205,13 @@ void Sparkle(byte red, byte green, byte blue, int SpeedDelay) {
   showStrip();
   delay(SpeedDelay);
   setPixel(Pixel,0,0,0);
+}
+
+// Helper function for switch/case statements, lowers code duplication
+void writeAndShift(int digitNumber) {
+  digitalWrite(LATCH, LOW);
+  shiftOut(DATA, CLK, MSBFIRST, digit[digitNumber]);
+  digitalWrite(LATCH, HIGH);
 }
 
 // ***********************
@@ -235,56 +240,42 @@ void loop(){
 
     case 1:
       FadeInOut(0xff, 0x00, 0x00); // Red
-      digitalWrite(LATCH, LOW);
-      shiftOut(DATA, CLK, MSBFIRST, digit[sequenceNumber]);
-      digitalWrite(LATCH, HIGH);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 2:
       RunningLights(0xff, 0x00, 0x00, 50);  // Red
-      digitalWrite(LATCH, LOW);
-      shiftOut(DATA, CLK, MSBFIRST, digit[sequenceNumber]);
-      digitalWrite(LATCH, HIGH);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 3:
       theaterChase(0xff, 0x00, 0x00, 100); // Red
-      digitalWrite(LATCH, LOW);
-      shiftOut(DATA, CLK, MSBFIRST, digit[sequenceNumber]);
-      digitalWrite(LATCH, HIGH);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 4:
       meteorRain(0xff,0x00,0x00,10, 16, false, 20);
-      digitalWrite(LATCH, LOW);
-      shiftOut(DATA, CLK, MSBFIRST, digit[sequenceNumber]);
-      digitalWrite(LATCH, HIGH);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 5:
       CylonBounce(0xff, 0x00, 0x00, 4, 20);
-      digitalWrite(LATCH, LOW);
-      shiftOut(DATA, CLK, MSBFIRST, digit[sequenceNumber]);
-      digitalWrite(LATCH, HIGH);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 6:
       Sparkle(random(0xff), random(0x00), random(0x00), 2);
-      digitalWrite(LATCH, LOW);
-      shiftOut(DATA, CLK, MSBFIRST, digit[sequenceNumber]);
-      digitalWrite(LATCH, HIGH);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 7:
       sequenceNumber = 1; // Resets the sequence number back to one in order to run the code in a cycle
       break;
-    
+
     default: // Failsafe if the sequence number cannot be read
       fill_solid(leds, NUM_LEDS, CRGB::Red); // Sets all LED's to red.
       FastLED.show();
-      digitalWrite(LATCH, LOW);
-      shiftOut(DATA, CLK, MSBFIRST, digit[10]); // Displays an 'E' on the 7-seg display to indicate an error
-      digitalWrite(LATCH, HIGH);
+	    writeAndShift(10); // Displays an 'E' on the 7-seg display to indicate an error
       break;
   }
 }
