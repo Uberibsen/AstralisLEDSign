@@ -86,7 +86,7 @@ void setAll(byte red, byte green, byte blue) {
   showStrip();
 }
 
-void FadeInOut(byte red, byte green, byte blue){
+void FadeInOut(byte red, byte green, byte blue) {
   float r, g, b;
 
   for(int k = 0; k < 256; k=k+1) {
@@ -123,17 +123,15 @@ void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
 }
 
 void theaterChase(byte red, byte green, byte blue, int SpeedDelay) {
-  for (int j=0; j<1; j++) {
-    for (int q=0; q < 3; q++) {
-      for (int i=0; i < NUM_LEDS; i=i+3) {
-        setPixel(i+q, red, green, blue);    //turn every third pixel on
-      }
-      showStrip();
-      delay(SpeedDelay);
+  for (int q=0; q < 3; q++) {
+    for (int i=0; i < NUM_LEDS; i=i+3) {
+      setPixel(i+q, red, green, blue);    //turn every third pixel on
+    }
+    showStrip();
+    delay(SpeedDelay);
 
-      for (int i=0; i < NUM_LEDS; i=i+3) {
-        setPixel(i+q, 0,0,0);        //turn every third pixel off
-      }
+    for (int i=0; i < NUM_LEDS; i=i+3) {
+      setPixel(i+q, 0,0,0);        //turn every third pixel off
     }
   }
 }
@@ -242,32 +240,32 @@ void loop(){
 
     case 1:
       FadeInOut(0xff, 0x00, 0x00); // Red
-	  writeAndShift(sequenceNumber);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 2:
       RunningLights(0xff, 0x00, 0x00, 50);  // Red
-	  writeAndShift(sequenceNumber);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 3:
       theaterChase(0xff, 0x00, 0x00, 100); // Red
-	  writeAndShift(sequenceNumber);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 4:
       meteorRain(0xff,0x00,0x00,10, 16, false, 20);
-	  writeAndShift(sequenceNumber);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 5:
       CylonBounce(0xff, 0x00, 0x00, 4, 20);
-	  writeAndShift(sequenceNumber);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 6:
       Sparkle(random(0xff), random(0x00), random(0x00), 2);
-	  writeAndShift(sequenceNumber);
+	    writeAndShift(sequenceNumber);
       break;
 
     case 7:
@@ -277,7 +275,7 @@ void loop(){
     default: // Failsafe if the sequence number cannot be read
       fill_solid(leds, NUM_LEDS, CRGB::Red); // Sets all LED's to red.
       FastLED.show();
-	  writeAndShift(10); // Displays an 'E' on the 7-seg display to indicate an error
+	    writeAndShift(10); // Displays an 'E' on the 7-seg display to indicate an error
       break;
   }
 }
