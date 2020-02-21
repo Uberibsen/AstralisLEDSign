@@ -18,9 +18,9 @@ CRGB leds[NUM_LEDS];
 #define MIN_BRIGHTNESS 20 // Minimum brightness
 
 // 7-segment display
-#define LATCH 7
-#define CLK 6
-#define DATA 5
+#define LATCH 9
+#define CLK 7
+#define DATA 8
 
 // Lightning sequence button
 #define buttonPin 11
@@ -30,17 +30,17 @@ int lastButtonState = 0;     // previous state of the button
 
 // Declaring the bytes transferred to the 74HC595 making up the 7-segment display
 const byte digit[]= {
-  B00111111,  // 0
-  B00000110,  // 1
-  B01011011,  // 2
-  B01001111,  // 3
+  B11111101,  // 0
+  B01100000,  // 1
+  B11011011,  // 2
+  B11110011,  // 3
   B01100110,  // 4
-  B01101101,  // 5
-  B01111101,  // 6
-  B00000111,  // 7
-  B01111111,  // 8
-  B01101111,  // 9
-  B01001111,  // E
+  B10110111,  // 5
+  B10111111,  // 6
+  B11100000,  // 7
+  B11111110,  // 8
+  B11110111,  // 9
+  B10011111,  // E
 };
 
 void setup() {
@@ -209,9 +209,16 @@ void Sparkle(byte red, byte green, byte blue, int SpeedDelay) {
 
 // Helper function for switch/case statements, lowers code duplication
 void writeAndShift(int digitNumber) {
-  digitalWrite(LATCH, LOW);
-  shiftOut(DATA, CLK, MSBFIRST, digit[digitNumber]);
-  digitalWrite(LATCH, HIGH);
+  for (int i = 0; i <= 8; i++)
+  {
+    digitalWrite(LATCH, LOW);
+    digitalWrite(CLK, LOW);
+
+    shiftOut(DATA, CLK, MSBFIRST, digit[digitNumber] >> i);
+    digitalWrite(LATCH, HIGH);
+    delay(20);
+  }
+  
 }
 
 // ***********************
