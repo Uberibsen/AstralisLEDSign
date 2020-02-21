@@ -24,7 +24,7 @@ CRGB leds[NUM_LEDS];
 
 // Lightning sequence button
 #define buttonPin 11
-int sequenceNumber = 0;
+int sequenceNumber = -1;
 int buttonState = 0;         // current state of the button
 int lastButtonState = 0;     // previous state of the button
 
@@ -86,117 +86,95 @@ void setAll(byte red, byte green, byte blue) {
   showStrip();
 }
 
+int iFadeInOut = 0;
+bool bFadeInOut = true;
+
 void FadeInOut(byte red, byte green, byte blue) {
   float r, g, b;
 
-  for(int k = 0; k < 256; k=k+1) {
-    r = (k/256.0)*red;
-    g = (k/256.0)*green;
-    b = (k/256.0)*blue;
+  if (bFadeInOut) {
+    r = (iFadeInOut/256.0)*red;
+    g = (iFadeInOut/256.0)*green;
+    b = (iFadeInOut/256.0)*blue;
     setAll(r,g,b);
     showStrip();
-  }
 
-  for(int k = 255; k >= 0; k=k-2) {
-    r = (k/256.0)*red;
-    g = (k/256.0)*green;
-    b = (k/256.0)*blue;
+    iFadeInOut++;
+
+    bFadeInOut = iFadeInOut <= 255;
+  } else {
+    r = (iFadeInOut/256.0)*red;
+    g = (iFadeInOut/256.0)*green;
+    b = (iFadeInOut/256.0)*blue;
     setAll(r,g,b);
     showStrip();
+    
+    iFadeInOut -= 2;
+
+    bFadeInOut = iFadeInOut <= 0;
   }
 }
 
-void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
-  int Position=0;
+int iRunningLights = 1;
+int RunningLightsDistance = 5;
+int RunningLightsDelay = 4;
 
-  for(int j=0; j<5; j++)
+void RunningLights(byte red, byte green, byte blue) {
+
+  for(int i=0; i<NUM_LEDS; i++) {
+    setPixel(i,((sin(i+(iRunningLights / RunningLightsDelay)) * 127 + 128)/255)*red,
+                ((sin(i+(iRunningLights / RunningLightsDelay)) * 127 + 128)/255)*green,
+                ((sin(i+(iRunningLights / RunningLightsDelay)) * 127 + 128)/255)*blue);
+  }
+  showStrip();
+
+  iRunningLights = (iRunningLights + 1) % (RunningLightsDistance * RunningLightsDelay);
+}
+
+int theaterDistance = 3;
+int theaterDelay = 300;
+int theaterJ = 0;
+int theaterI = 0;
+
+void theaterChase(byte red, byte green, byte blue) {
+  if (theaterI == 0) {
+    for (int i=0; i < NUM_LEDS; i++) {
+      setPixel(i, 0,0,0);
+    }
+
+    for (int i=0; i < NUM_LEDS; i+=theaterDistance) {
+      setPixel(i+theaterJ, red, green, blue);    //turn every theaterDistance pixel on
+    }
+    showStrip();
+
+    theaterJ = (theaterJ + 1) % theaterDistance;
+  }
+
+  theaterI = (theaterI + 1) % theaterDelay;
+}
+
+int meteorRainI = 0;
+int meteorRainDelay = 10;
+int meteorTrailLength = 30;
+
+void meteorRain(byte red, byte green, byte blue) 
+{
+  int i = meteorRainI / meteorRainDelay;
+  int positionMod = i + NUM_LEDS - meteorTrailLength;
+
+  for (int j = meteorTrailLength; j >= 0; j--)
   {
-      Position++; // = 0; //Position + Rate;
-      for(int i=0; i<NUM_LEDS; i++) {
-        setPixel(i,((sin(i+Position) * 127 + 128)/255)*red,
-                   ((sin(i+Position) * 127 + 128)/255)*green,
-                   ((sin(i+Position) * 127 + 128)/255)*blue);
-      }
-      showStrip();
-      delay(WaveDelay);
+    int position = (j + positionMod) % NUM_LEDS;
+    int strength = ((j * 255) / meteorTrailLength);
+    setPixel(position, (red * strength) / 255, (green * strength) / 255, (blue * strength) / 255);
   }
-}
-
-void theaterChase(byte red, byte green, byte blue, int SpeedDelay) {
-  for (int q=0; q < 3; q++) {
-    for (int i=0; i < NUM_LEDS; i=i+3) {
-      setPixel(i+q, red, green, blue);    //turn every third pixel on
-    }
-    showStrip();
-    delay(SpeedDelay);
-
-    for (int i=0; i < NUM_LEDS; i=i+3) {
-      setPixel(i+q, 0,0,0);        //turn every third pixel off
-    }
+  for (int j = 1; j < NUM_LEDS - meteorTrailLength; j++)
+  {
+    setPixel((i + j + NUM_LEDS) % NUM_LEDS, 0, 0, 0);
   }
-}
-
-void meteorRain(byte red, byte green, byte blue, byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {
-  setAll(0,0,0);
-
-  for(int i = 0; i < NUM_LEDS+NUM_LEDS; i++) {
-
-
-    // fade brightness all LEDs one step
-    for(int j=0; j<NUM_LEDS; j++) {
-      if( (!meteorRandomDecay) || (random(10)>5) ) {
-        fadeToBlack(j, meteorTrailDecay );
-      }
-    }
-
-    // draw meteor
-    for(int j = 0; j < meteorSize; j++) {
-      if( ( i-j <NUM_LEDS) && (i-j>=0) ) {
-        setPixel(i-j, red, green, blue);
-      }
-    }
-
-    showStrip();
-    delay(SpeedDelay);
-  }
-}
-
-void fadeToBlack(int ledNo, byte fadeValue) {
- #ifdef ADAFRUIT_NEOPIXEL_H
-    // NeoPixel
-    uint32_t oldColor;
-    uint8_t r, g, b;
-    int value;
-
-    oldColor = strip.getPixelColor(ledNo);
-    r = (oldColor & 0x00ff0000UL) >> 16;
-    g = (oldColor & 0x0000ff00UL) >> 8;
-    b = (oldColor & 0x000000ffUL);
-
-    r=(r<=10)? 0 : (int) r-(r*fadeValue/256);
-    g=(g<=10)? 0 : (int) g-(g*fadeValue/256);
-    b=(b<=10)? 0 : (int) b-(b*fadeValue/256);
-
-    strip.setPixelColor(ledNo, r,g,b);
- #endif
- #ifndef ADAFRUIT_NEOPIXEL_H
-   // FastLED
-   leds[ledNo].fadeToBlackBy( fadeValue );
- #endif
-}
-
-void CylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay){
-
-  for(int i = 0; i < NUM_LEDS-EyeSize-2; i++) {
-    setAll(0,0,0);
-    setPixel(i, red/10, green/10, blue/10);
-    for(int j = 1; j <= EyeSize; j++) {
-      setPixel(i+j, red, green, blue);
-    }
-    setPixel(i+EyeSize+1, red/10, green/10, blue/10);
-    showStrip();
-    delay(SpeedDelay);
-  }
+  showStrip();
+  
+  meteorRainI = (meteorRainI + 1) % (NUM_LEDS * meteorRainDelay);
 }
 
 void Sparkle(byte red, byte green, byte blue, int SpeedDelay) {
@@ -218,7 +196,6 @@ void writeAndShift(int digitNumber) {
     digitalWrite(LATCH, HIGH);
     delay(20);
   }
-  
 }
 
 // ***********************
@@ -226,15 +203,15 @@ void writeAndShift(int digitNumber) {
 // ***********************
 
 void loop(){
-
   // LED lightning sequence control
   buttonState = digitalRead(buttonPin);
 
   if (buttonState != lastButtonState) {
     if (buttonState == HIGH) {
-      sequenceNumber++;
+      sequenceNumber = (sequenceNumber+1) % 5;
+      writeAndShift(sequenceNumber + 1);
+      setAll(0, 0, 0);
     }
-    delay(50);
   }
   // save the current state as the last state, for next time through the loop
   lastButtonState = buttonState;
@@ -245,38 +222,24 @@ void loop(){
 
   switch(sequenceNumber){
 
-    case 1:
+    case 0:
       FadeInOut(0xff, 0x00, 0x00); // Red
-	    writeAndShift(sequenceNumber);
+      break;
+
+    case 1:
+      RunningLights(0xff, 0x00, 0x00);  // Red
       break;
 
     case 2:
-      RunningLights(0xff, 0x00, 0x00, 50);  // Red
-	    writeAndShift(sequenceNumber);
+      theaterChase(0xff, 0x00, 0x00); // Red
       break;
 
     case 3:
-      theaterChase(0xff, 0x00, 0x00, 100); // Red
-	    writeAndShift(sequenceNumber);
+      meteorRain(0xff,0x00,0x00);
       break;
 
     case 4:
-      meteorRain(0xff,0x00,0x00,10, 16, false, 20);
-	    writeAndShift(sequenceNumber);
-      break;
-
-    case 5:
-      CylonBounce(0xff, 0x00, 0x00, 4, 20);
-	    writeAndShift(sequenceNumber);
-      break;
-
-    case 6:
-      Sparkle(random(0xff), random(0x00), random(0x00), 2);
-	    writeAndShift(sequenceNumber);
-      break;
-
-    case 7:
-      sequenceNumber = 1; // Resets the sequence number back to one in order to run the code in a cycle
+      Sparkle(0xff, 0x00, 0x00, 2);
       break;
 
     default: // Failsafe if the sequence number cannot be read
