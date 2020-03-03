@@ -1,7 +1,6 @@
 /*
 Project: Astralis LED Sign
 Created by: Jonas Ibsen
-Date: 15th of February 2020
 
 https://github.com/Uberibsen
 
@@ -86,6 +85,7 @@ void setAll(byte red, byte green, byte blue) {
   showStrip();
 }
 
+// Fade in and out effect
 int iFadeInOut = 0;
 bool bFadeInOut = true;
 
@@ -115,6 +115,7 @@ void FadeInOut(byte red, byte green, byte blue) {
   }
 }
 
+// Running lights effect
 int iRunningLights = 1;
 int RunningLightsDistance = 5;
 int RunningLightsDelay = 4;
@@ -131,6 +132,7 @@ void RunningLights(byte red, byte green, byte blue) {
   iRunningLights = (iRunningLights + 1) % (RunningLightsDistance * RunningLightsDelay);
 }
 
+// Theater chase effect
 int theaterDistance = 3;
 int theaterDelay = 300;
 int theaterJ = 0;
@@ -153,6 +155,7 @@ void theaterChase(byte red, byte green, byte blue) {
   theaterI = (theaterI + 1) % theaterDelay;
 }
 
+// Meteor rain effect
 int meteorRainI = 0;
 int meteorRainDelay = 10;
 int meteorTrailLength = 30;
@@ -177,6 +180,7 @@ void meteorRain(byte red, byte green, byte blue)
   meteorRainI = (meteorRainI + 1) % (NUM_LEDS * meteorRainDelay);
 }
 
+// Sparkle effect
 void Sparkle(byte red, byte green, byte blue, int SpeedDelay) {
   int Pixel = random(NUM_LEDS);
   setPixel(Pixel,red,green,blue);
@@ -185,7 +189,8 @@ void Sparkle(byte red, byte green, byte blue, int SpeedDelay) {
   setPixel(Pixel,0,0,0);
 }
 
-// Helper function for switch/case statements, lowers code duplication
+// Helper function for switch/case statements
+// Controls the 7-segment display
 void writeAndShift(int digitNumber) {
   for (int i = 0; i <= 8; i++)
   {
@@ -216,30 +221,30 @@ void loop(){
   // save the current state as the last state, for next time through the loop
   lastButtonState = buttonState;
 
-  // LED brightness control (Working only for every lighting cycle)
+  // LED brightness control
   int brightnessValue = map(analogRead(brightnessPin), 0, 1023, 0, 255);
   FastLED.setBrightness(constrain(brightnessValue, MIN_BRIGHTNESS, MAX_BRIGHTNESS));
 
   switch(sequenceNumber){
 
     case 0:
-      FadeInOut(0xff, 0x00, 0x00); // Red
+      FadeInOut(0xff, 0x00, 0x00); // Only using red
       break;
 
     case 1:
-      RunningLights(0xff, 0x00, 0x00);  // Red
+      RunningLights(0xff, 0x00, 0x00);  // Only using red
       break;
 
     case 2:
-      theaterChase(0xff, 0x00, 0x00); // Red
+      theaterChase(0xff, 0x00, 0x00); // Only using red
       break;
 
     case 3:
-      meteorRain(0xff,0x00,0x00);
+      meteorRain(0xff, 0x00, 0x00); // Only using red
       break;
 
     case 4:
-      Sparkle(0xff, 0x00, 0x00, 2);
+      Sparkle(0xff, 0x00, 0x00, 2); // Only using red
       break;
 
     default: // Failsafe if the sequence number cannot be read
