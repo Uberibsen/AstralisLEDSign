@@ -13,8 +13,8 @@ This project is licensed under a Creative Commons Attribution 4.0 International 
 #define LED_DATA 12
 const int brightnessPin = A1; // Brightness control
 CRGB leds[NUM_LEDS];
-#define MAX_BRIGHTNESS 220 // Maximum brightness
-#define MIN_BRIGHTNESS 20 // Minimum brightness
+#define MAX_BRIGHTNESS 255 // Maximum brightness
+#define MIN_BRIGHTNESS 0 // Minimum brightness
 
 // 7-segment display
 #define LATCH 9
@@ -26,6 +26,9 @@ CRGB leds[NUM_LEDS];
 int sequenceNumber = -1;
 int buttonState = 0;         // current state of the button
 int lastButtonState = 0;     // previous state of the button
+
+// Microphone
+const int microphonePin = A2;
 
 // Declaring the bytes transferred to the 74HC595 making up the 7-segment display
 const byte digit[]= {
@@ -58,6 +61,9 @@ void setup() {
 
   // Brightness Control Pin
   pinMode(brightnessPin, INPUT);
+
+  // Microphone input pin
+  pinMode(microphonePin, INPUT);
 }
 
 // **************************
@@ -189,6 +195,13 @@ void Sparkle(byte red, byte green, byte blue, int SpeedDelay) {
   setPixel(Pixel,0,0,0);
 }
 
+// Reactive lights from sound
+void Microphone(byte red, byte green, byte blue, int micData){
+  FastLED.setBrightness(micData);
+  fill_solid(leds, NUM_LEDS, CRGB::Red); // Sets all LED's to red.
+  showStrip();
+}
+
 // Helper function for switch/case statements
 // Controls the 7-segment display
 void writeAndShift(int digitNumber) {
@@ -223,7 +236,14 @@ void loop(){
 
   // LED brightness control
   int brightnessValue = map(analogRead(brightnessPin), 0, 1023, 0, 255);
-  FastLED.setBrightness(constrain(brightnessValue, MIN_BRIGHTNESS, MAX_BRIGHTNESS));
+
+  // LED reactive brightness
+  int micData = map(analogRead(microphonePin), 0, 1023, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+
+  while (sequenceNumber != 5){
+    FastLED.setBrightness(constrain(brightnessValue, MIN_BRIGHTNESS, MAX_BRIGHTNESS));
+    break;
+  }
 
   switch(sequenceNumber){
 
@@ -247,10 +267,14 @@ void loop(){
       Sparkle(0xff, 0x00, 0x00, 2); // Only using red
       break;
 
+    case 5:
+      Microphone(0xff, 0x00, 0x00, micData); // Only using red
+      break;
+
     default: // Failsafe if the sequence number cannot be read
       fill_solid(leds, NUM_LEDS, CRGB::Red); // Sets all LED's to red.
       FastLED.show();
-	    writeAndShift(10); // Displays an 'E' on the 7-seg display to indicate an error
+      writeAndShift(10); // Displays an 'E' on the 7-seg display to indicate an error
       break;
   }
 }
